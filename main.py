@@ -58,8 +58,9 @@ class FileInfo(BaseModel):
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_DIR, file.filename)
+    # 使用更大的缓冲区（8MB）提高磁盘写入吞吐
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        shutil.copyfileobj(file.file, buffer, length=8 * 1024 * 1024)
     return {"filename": file.filename}
 
 @app.get("/files/", response_model=List[FileInfo])

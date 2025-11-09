@@ -91,6 +91,10 @@
             color: white;
             margin-left: 1rem;
         }
+        .button-share {
+
+            margin-left: 1rem;
+        }
          /* 新增进度条样式 */
         .progress-container {
             margin: 1rem 0;
@@ -197,6 +201,21 @@
             color: #556;
             font-size: 0.95em;
         }
+/* 轻量提示气泡 */
+.toast {
+    position: fixed;
+    left: 50%;
+    top: 20px;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    z-index: 9999;
+    pointer-events: none;
+    transition: opacity .2s ease;
+}
     </style>
 </head>
 <body>
@@ -252,6 +271,8 @@
                 </div>
                 <button class="button button-primary"
                     onclick="downloadFile('${file.name}')">Download</button>
+                <button class="button button-share"
+                    onclick="copyShareLink('${file.name}')">ShareLine</button>
                 <button class="button button-danger"
                     onclick="deleteFile('${file.name}')">Delete</button>
             `;
@@ -402,9 +423,18 @@
 
             (async () => {
                 try {
-                    for (const file of files) {
-                        await uploadOne(file);
-                    }
+                    // 并发上传，最大并发为4（可根据网络和服务器能力调整）
+                    const concurrency = Math.min(4, files.length);
+                    let index = 0;
+                    const workers = Array.from({ length: concurrency }, () => (async () => {
+                        while (true) {
+                            const i = index++;
+                            if (i >= files.length) break;
+                            await uploadOne(files[i]);
+                        }
+                    })());
+                    await Promise.all(workers);
+
                     statusEl.textContent = '全部文件上传完成';
                     await loadFiles();
                     input.value = '';
@@ -447,6 +477,45 @@
             } catch (error) {
                 console.error('下载失败:', error);
             }
+
+        }
+
+        // 复制分享链接到剪贴板
+        function copyShareLink(filename) {
+            const url = `${window.location.origin}/download/${encodeURIComponent(filename)}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url)
+                    .then(() => showToast('已复制分享链接'))
+                    .catch(() => fallbackCopy(url));
+            } else {
+                fallbackCopy(url);
+            }
+            // 移除阻塞的 alert，改为顶部轻量提示
+             showToast('Copy Success!');
+        }
+
+        function fallbackCopy(text) {
+            const input = document.createElement('input');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+
+        }
+
+        function showToast(msg) {
+            let t = document.getElementById('toast');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = 'toast';
+                t.className = 'toast';
+                document.body.appendChild(t);
+            }
+            t.textContent = msg;
+            t.style.opacity = '1';
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => { t.style.opacity = '0'; }, 1500);
         }
 
         // 初始化加载
