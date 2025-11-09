@@ -1,0 +1,458 @@
+<!-- static/index.html 美化后的前端 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Easy File Transfer</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --danger: #e74c3c;
+            --background: #f5f7fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            background: var(--background);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .upload-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .file-input {
+            margin: 1rem 0;
+        }
+
+        .button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .button:hover {
+            opacity: 0.9;
+        }
+
+        .button-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .file-list {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .file-item {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-info {
+            flex: 1;
+            margin-right: 1rem;
+        }
+
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+        }
+
+        .file-meta {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .button-danger {
+            background: var(--danger);
+            color: white;
+            margin-left: 1rem;
+        }
+         /* 新增进度条样式 */
+        .progress-container {
+            margin: 1rem 0;
+            background: #eee;
+            border-radius: 4px;
+            height: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        /* 新增状态提示 */
+        .status {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 0.5rem;
+        }
+
+        /* 新增速度显示 */
+        .speed {
+            display: inline-block;
+            margin-left: 1rem;
+            font-size: 0.9em;
+        }
+
+        /* 年轻化科技蓝 + 玻璃态 */
+        :root {
+            --primary: #66aaff;
+            --accent: #8ec5ff;
+            --text: #1f2a44;
+            --card-bg: rgba(255,255,255,0.6);
+            --card-border: rgba(102,170,255,0.25);
+        }
+        body {
+            background: radial-gradient(1000px 600px at 80% -100px, #eaf4ff 0%, #f6fbff 40%, #f5f7fa 100%);
+            color: var(--text);
+        }
+        .glass {
+            background: var(--card-bg);
+            backdrop-filter: saturate(140%) blur(10px);
+            border: 1px solid var(--card-border);
+        }
+        .header h1 {
+            letter-spacing: 0.5px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .button-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            box-shadow: 0 6px 14px rgba(102,170,255,0.25);
+        }
+        .button {
+            font-weight: 600;
+        }
+        .file-item {
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .file-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+        }
+        /* 列表控制条 */
+        .list-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            margin: 0 0 0.8rem 0;
+            background: rgba(255,255,255,0.5);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+        }
+        .list-controls .left {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: #445;
+            font-size: 0.95em;
+        }
+        .list-controls select {
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid var(--card-border);
+            background: #fff;
+        }
+        .pager {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .pager .button {
+            padding: 0.5rem 0.9rem;
+            background: white;
+            border: 1px solid var(--card-border);
+            color: var(--text);
+        }
+        #pageInfo {
+            color: #556;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📁Easy File Transfer</h1>
+        <p>Upload and manage your files</p>
+    </div>
+
+    <div class="upload-section glass">
+          <input type="file" id="fileInput" class="file-input" multiple>
+        <button class="button button-primary" onclick="startUpload()">Upload File</button>
+        <div class="progress-container" id="uploadProgress" style="display: none;">
+            <div class="progress-bar" id="uploadBar"></div>
+        </div>
+        <div class="status" id="uploadStatus"></div>
+    </div>
+
+    <div class="list-controls glass">
+        <div class="left">
+            <span>每页</span>
+            <select id="pageSize">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+            <span>共 <strong id="totalCount">0</strong> 项</span>
+        </div>
+        <div class="pager">
+            <button class="button" id="prevPage">上一页</button>
+            <span id="pageInfo">第 1 / 1 页</span>
+            <button class="button" id="nextPage">下一页</button>
+        </div>
+    </div>
+
+    <div class="file-list glass" id="fileList">
+        <!-- 动态加载文件列表 -->
+    </div>
+
+    <script>
+        // 动态生成文件列表项
+        function createFileItem(file) {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+
+            item.innerHTML = `
+                <div class="file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-meta">
+                        ${(file.size/1024).toFixed(2)}KB •
+                        ${new Date(file.modified_time * 1000).toLocaleDateString()}
+                    </div>
+                </div>
+                <button class="button button-primary"
+                    onclick="downloadFile('${file.name}')">Download</button>
+                <button class="button button-danger"
+                    onclick="deleteFile('${file.name}')">Delete</button>
+            `;
+            return item;
+        }
+    // 删除文件
+        async function deleteFile(filename) {
+            await fetch(`/files/${filename}`, {
+                method: 'DELETE'
+            });
+            await loadFiles();
+        }
+        // 分页状态
+        let allFiles = [];
+        let currentPage = 1;
+        let pageSize = 10;
+
+        function renderPage() {
+            const container = document.getElementById('fileList');
+            const total = allFiles.length;
+            const totalPages = Math.max(1, Math.ceil(total / pageSize));
+            currentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageItems = allFiles.slice(start, end);
+
+            container.innerHTML = '';
+            pageItems.forEach(file => container.appendChild(createFileItem(file)));
+
+            document.getElementById('totalCount').textContent = String(total);
+            document.getElementById('pageInfo').textContent = `第 ${currentPage} / ${totalPages} 页`;
+
+            document.getElementById('prevPage').disabled = currentPage <= 1;
+            document.getElementById('nextPage').disabled = currentPage >= totalPages;
+        }
+
+        function initPagination() {
+            const sel = document.getElementById('pageSize');
+            sel.value = String(pageSize);
+            sel.addEventListener('change', () => {
+                pageSize = parseInt(sel.value, 10);
+                currentPage = 1;
+                renderPage();
+            });
+            document.getElementById('prevPage').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--; renderPage();
+                }
+            });
+            document.getElementById('nextPage').addEventListener('click', () => {
+                const totalPages = Math.max(1, Math.ceil(allFiles.length / pageSize));
+                if (currentPage < totalPages) {
+                    currentPage++; renderPage();
+                }
+            });
+        }
+
+        // 加载文件列表（分页版）
+        async function loadFiles() {
+            try {
+                const response = await fetch('/files/');
+                const files = await response.json();
+                allFiles = files.sort((a, b) => b.modified_time - a.modified_time);
+                renderPage();
+            } catch (error) {
+                console.error('Error loading files:', error);
+                // 预览模式下的演示数据
+                if (allFiles.length === 0) {
+                    allFiles = Array.from({ length: 18 }).map((_, i) => ({
+                        name: `示例文件_${i + 1}.txt`,
+                        size: Math.round((Math.random() * 500 + 50) * 1024),
+                        modified_time: (Date.now() / 1000) - i * 3600
+                    }));
+                    renderPage();
+                }
+            }
+        }
+
+        // 下载文件实现（由下方增强版本负责）
+
+        // 保持原有上传和删除逻辑，添加加载动画
+        async function uploadFile() {
+            const input = document.getElementById('fileInput');
+            if (!input.files.length) return alert('Please select a file');
+
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+
+            try {
+                await fetch('/upload/', { method: 'POST', body: formData });
+                await loadFiles();
+                input.value = ''; // 清空文件选择
+            } catch (error) {
+                alert('Upload failed: ' + error.message);
+            }
+        }
+         // 上传进度跟踪
+        function startUpload() {
+            const input = document.getElementById('fileInput');
+            const files = input.files;
+            if (!files.length) return alert('请选择文件');
+
+            const totalSize = Array.from(files).reduce((s, f) => s + f.size, 0);
+            let uploadedSoFar = 0;
+            const startTime = Date.now();
+
+            const progressEl = document.getElementById('uploadProgress');
+            const barEl = document.getElementById('uploadBar');
+            const statusEl = document.getElementById('uploadStatus');
+
+            progressEl.style.display = 'block';
+            barEl.style.width = '0%';
+            statusEl.textContent = `准备上传（${files.length} 个文件）...`;
+
+            const uploadOne = (file) => new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const xhr = new XMLHttpRequest();
+                let lastLoaded = 0;
+
+                xhr.upload.addEventListener('progress', (e) => {
+                    const delta = e.loaded - lastLoaded;
+                    lastLoaded = e.loaded;
+                    uploadedSoFar += delta;
+
+                    const percent = (uploadedSoFar / totalSize * 100).toFixed(1);
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    const speed = (uploadedSoFar / 1024 / elapsed).toFixed(1);
+
+                    barEl.style.width = `${percent}%`;
+                    statusEl.textContent = `上传中: ${percent}% - 速度: ${speed} KB/s`;
+                });
+
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        resolve();
+                    } else {
+                        reject(new Error(`上传失败: ${file.name}`));
+                    }
+                };
+                xhr.onerror = () => reject(new Error(`网络错误: ${file.name}`));
+
+                xhr.open('POST', '/upload/');
+                xhr.send(formData);
+            });
+
+            (async () => {
+                try {
+                    for (const file of files) {
+                        await uploadOne(file);
+                    }
+                    statusEl.textContent = '全部文件上传完成';
+                    await loadFiles();
+                    input.value = '';
+                    setTimeout(() => { progressEl.style.display = 'none'; }, 1500);
+                } catch (err) {
+                    statusEl.textContent = err.message;
+                    progressEl.style.display = 'none';
+                }
+            })();
+        }
+
+        // 下载速度跟踪
+        async function downloadFile(filename) {
+            const startTime = Date.now();
+            let loaded = 0;
+
+            try {
+                const response = await fetch(`/download/${filename}`);
+                const reader = response.body.getReader();
+                const contentLength = +response.headers.get('Content-Length');
+
+                const statusElem = document.getElementById('downloadStatus');
+                const progressElem = document.getElementById('downloadProgress');
+
+                // 实时更新下载进度
+                while(true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+
+                    loaded += value.length;
+                    const percent = (loaded / contentLength * 100).toFixed(1);
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    const speed = (loaded / 1024 / elapsed).toFixed(1);
+
+                    console.log(`下载进度: ${percent}% 速度: ${speed} KB/s`);
+                }
+
+                // 实际下载触发
+                window.open(`/download/${filename}`, '_blank');
+            } catch (error) {
+                console.error('下载失败:', error);
+            }
+        }
+
+        // 初始化加载
+        initPagination();
+        loadFiles();
+        setInterval(loadFiles, 5000); // 每5秒自动刷新
+    </script>
+</body>
+</html>
